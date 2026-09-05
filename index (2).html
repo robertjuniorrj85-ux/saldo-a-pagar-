@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#6d28d9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Saldo a Pagar</title>
+<style>
+:root{--bg:#f6f4fb;--card:#fff;--text:#201a2b;--muted:#746d7c;--primary:#6d28d9;--primary2:#8b5cf6;--ok:#15803d;--danger:#b91c1c;--border:#e7e1ef}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 40px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
+h1{font-size:26px;margin:0} .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.hero{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-radius:22px;padding:22px;box-shadow:0 10px 30px rgba(109,40,217,.18)}
+.hero .big{font-size:36px;font-weight:800;margin:5px 0 16px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);padding:12px;border-radius:14px} .stat b{display:block;font-size:18px;margin-top:3px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+button{border:0;border-radius:14px;padding:14px;font-weight:700;cursor:pointer}
+.primary{background:var(--primary);color:#fff} .secondary{background:#fff;color:var(--primary);border:1px solid var(--border)} .ghost{background:transparent;color:var(--muted);padding:8px 10px} .danger{color:var(--danger)}
+.section-title{font-size:17px;font-weight:800;margin:20px 2px 10px}
+.debt{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:15px;margin-bottom:10px} .debt.done{background:#ecfdf3;border-color:#bbf7d0}
+.topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .name{font-weight:800;font-size:17px} .due{font-size:12px;color:var(--muted);margin-top:3px}
+.remain{font-weight:800;color:var(--primary);white-space:nowrap} .paid{color:var(--ok)}
+.progress{height:9px;background:#eee9f5;border-radius:999px;overflow:hidden;margin:12px 0} .bar{height:100%;background:var(--primary)}
+.meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+.obs{margin-top:10px;padding:10px 12px;background:#faf8fd;border-radius:12px;color:var(--muted);font-size:13px;white-space:pre-wrap}
+.row-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap} .row-actions button{padding:9px 11px;border-radius:10px;font-size:12px}
+.install{display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;margin:12px 0;font-size:13px}
+dialog{border:0;border-radius:20px;padding:0;max-width:460px;width:calc(100% - 28px);box-shadow:0 25px 70px rgba(0,0,0,.22)} dialog::backdrop{background:rgba(25,20,30,.45)}
+.modal{padding:20px} .modal h2{margin:0 0 14px;font-size:20px} label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
+input,select,textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:13px;font-size:16px;background:white;font-family:inherit}
+textarea{min-height:84px;resize:vertical} .modal-actions{display:flex;gap:10px;margin-top:18px} .modal-actions button{flex:1}
+.note{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;line-height:1.5}
+@media(max-width:430px){.hero .big{font-size:31px}.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><h1>Saldo a Pagar</h1><div class="sub">Controle offline das suas contas</div></div><button class="ghost" onclick="exportar()">Backup</button></header>
+<div id="installBox" class="install">Quer instalar este app na tela inicial? <button class="primary" style="padding:8px 10px;margin-left:6px" onclick="instalar()">Instalar</button></div>
+
+<section class="hero">
+<small>Saldo devedor total</small><div class="big" id="saldo">R$ 0,00</div>
+<div class="stats"><div class="stat"><small>Valor inicial</small><b id="inicial">R$ 0,00</b></div><div class="stat"><small>Total pago</small><b id="pago">R$ 0,00</b></div></div>
+</section>
+
+<div class="actions"><button class="primary" onclick="abrirNova()">+ Adicionar conta</button><button class="secondary" onclick="abrirPagamento()">Registrar pagamento</button></div>
+<div class="section-title">Minhas contas</div><div id="lista"></div>
+<div class="note">Os dados ficam armazenados neste dispositivo. O app não usa câmera, microfone, localização, contatos ou conta bancária.</div>
+</div>
+
+<dialog id="dlgNova"><form class="modal" onsubmit="salvarConta(event)">
+<h2>Adicionar conta</h2>
+<label>Nome</label><input id="nome" required placeholder="Ex.: Combustível 06">
+<label>Valor</label><input id="valor" inputmode="decimal" required placeholder="0,00">
+<label>Vencimento</label><input id="vencimento" type="date">
+<label>Observações</label><textarea id="observacao" placeholder="Ex.: 180 km rodados | 22,5 litros | R$ 7,00/L"></textarea>
+<div class="modal-actions"><button type="button" class="secondary" onclick="dlgNova.close()">Cancelar</button><button class="primary">Salvar</button></div>
+</form></dialog>
+
+<dialog id="dlgPg"><form class="modal" onsubmit="salvarPagamento(event)">
+<h2>Registrar pagamento</h2><label>Conta</label><select id="contaPg" required></select><label>Valor pago</label><input id="valorPg" inputmode="decimal" required placeholder="0,00">
+<div class="modal-actions"><button type="button" class="secondary" onclick="dlgPg.close()">Cancelar</button><button class="primary">Abater</button></div>
+</form></dialog>
+
+<dialog id="dlgEdit"><form class="modal" onsubmit="salvarEdicao(event)">
+<h2>Editar conta</h2><input id="editId" type="hidden"><label>Nome</label><input id="editNome" required><label>Valor</label><input id="editValor" inputmode="decimal" required>
+<label>Vencimento</label><input id="editVencimento" type="date"><label>Observações</label><textarea id="editObservacao"></textarea>
+<div class="modal-actions"><button type="button" class="secondary" onclick="dlgEdit.close()">Cancelar</button><button class="primary">Salvar</button></div>
+</form></dialog>
+
+<script>
+const STORAGE='saldo_a_pagar_pwa_v4';
+const INICIAIS=[{"id": "1", "nome": "DÍZIMO ROSÂNGELA", "valor": 250.0, "pago": 250.0, "vencimento": "2026-09-01", "observacao": ""}, {"id": "2", "nome": "RECARGA DE CELULAR JULIA", "valor": 30.0, "pago": 30.0, "vencimento": "2026-09-03", "observacao": ""}, {"id": "3", "nome": "RECARGA CELULAR ROSÂNGELA", "valor": 30.0, "pago": 30.0, "vencimento": "2026-09-04", "observacao": ""}, {"id": "4", "nome": "COMBUSTÍVEL 01", "valor": 132.8, "pago": 132.8, "vencimento": "2026-09-04", "observacao": "154,2 km rodados | 18,972 litros | R$ 7,00/L"}, {"id": "5", "nome": "MESADA JULIA", "valor": 150.0, "pago": 150.0, "vencimento": "2026-09-05", "observacao": ""}, {"id": "6", "nome": "CARRO", "valor": 1350.0, "pago": 0, "vencimento": "2026-09-08", "observacao": ""}, {"id": "7", "nome": "COMBUSTÍVEL 02", "valor": 150.0, "pago": 0, "vencimento": "2026-09-08", "observacao": ""}, {"id": "8", "nome": "FACULDADE - 5 / 17", "valor": 130.0, "pago": 0, "vencimento": "2026-09-10", "observacao": ""}, {"id": "9", "nome": "BANESE CARD", "valor": 600.0, "pago": 0, "vencimento": "2026-09-11", "observacao": ""}, {"id": "10", "nome": "DÍZIMO JUNIOR", "valor": 510.0, "pago": 0, "vencimento": "2026-09-12", "observacao": ""}, {"id": "11", "nome": "COMPRAS", "valor": 1200.0, "pago": 0, "vencimento": "2026-09-12", "observacao": ""}, {"id": "12", "nome": "RECARGA CARTEIRA ÔNIBUS", "valor": 100.0, "pago": 0, "vencimento": "2026-09-12", "observacao": ""}, {"id": "13", "nome": "HIPERCARD", "valor": 700.0, "pago": 0, "vencimento": "2026-09-15", "observacao": ""}, {"id": "14", "nome": "COMBUSTÍVEL 03", "valor": 175.01, "pago": 0, "vencimento": "2026-09-15", "observacao": "180 km rodados"}, {"id": "15", "nome": "ACADEMIA JULIA", "valor": 80.0, "pago": 0, "vencimento": "2026-09-20", "observacao": ""}, {"id": "16", "nome": "ENERGIA", "valor": 120.0, "pago": 0, "vencimento": "2026-09-21", "observacao": ""}, {"id": "17", "nome": "ÁGUA", "valor": 70.0, "pago": 0, "vencimento": "2026-09-21", "observacao": ""}, {"id": "18", "nome": "COMBUSTÍVEL 04", "valor": 153.0, "pago": 0, "vencimento": "2026-09-22", "observacao": ""}, {"id": "19", "nome": "FUTEBOL SOCIETY", "valor": 40.0, "pago": 0, "vencimento": "2026-09-25", "observacao": ""}, {"id": "20", "nome": "CASA", "valor": 390.0, "pago": 0, "vencimento": "2026-09-28", "observacao": ""}, {"id": "21", "nome": "COMBUSTÍVEL 05", "valor": 150.0, "pago": 0, "vencimento": "2026-09-30", "observacao": ""}, {"id": "22", "nome": "ACADEMIA ROSÂNGELA", "valor": 80.0, "pago": 0, "vencimento": "2026-09-30", "observacao": ""}];
+let contas=JSON.parse(localStorage.getItem(STORAGE)||'null');
+if(!Array.isArray(contas)){contas=INICIAIS;localStorage.setItem(STORAGE,JSON.stringify(contas));}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function parseBR(s){s=String(s||'').trim().replace(/\s/g,'');if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');return Number(s)}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function save(){localStorage.setItem(STORAGE,JSON.stringify(contas));render()}
+function render(){
+ const inicial=contas.reduce((a,c)=>a+c.valor,0),pago=contas.reduce((a,c)=>a+c.pago,0);
+ document.getElementById('inicial').textContent=money(inicial);document.getElementById('pago').textContent=money(pago);document.getElementById('saldo').textContent=money(inicial-pago);
+ document.getElementById('lista').innerHTML=[...contas].sort((a,b)=>(a.vencimento||'9999').localeCompare(b.vencimento||'9999')).map(c=>{
+  const r=Math.max(0,c.valor-c.pago),ok=r<.005,p=c.valor?Math.min(100,c.pago/c.valor*100):100,v=c.vencimento?new Date(c.vencimento+'T12:00:00').toLocaleDateString('pt-BR'):'Sem vencimento';
+  return `<div class="debt ${ok?'done':''}"><div class="topline"><div><div class="name">${esc(c.nome)}</div><div class="due">${v}</div></div><div class="remain ${ok?'paid':''}">${ok?'PAGO ✓':money(r)}</div></div><div class="progress"><div class="bar" style="width:${p}%"></div></div><div class="meta"><span>Total: ${money(c.valor)}</span><span>Pago: ${money(c.pago)}</span></div>${c.observacao?`<div class="obs">${esc(c.observacao)}</div>`:''}<div class="row-actions">${ok?'':`<button class="secondary" onclick="pagarDireto('${c.id}')">+ Pagamento</button>`}<button class="secondary" onclick="editar('${c.id}')">Editar</button><button class="ghost danger" onclick="excluir('${c.id}')">Excluir</button></div></div>`
+ }).join('');
+}
+function abrirNova(){nome.value='';valor.value='';vencimento.value='';observacao.value='';dlgNova.showModal()}
+function salvarConta(e){e.preventDefault();const v=parseBR(valor.value);if(!nome.value.trim()||!v||v<=0)return alert('Informe nome e valor válidos.');contas.push({id:String(Date.now()),nome:nome.value.trim(),valor:v,pago:0,vencimento:vencimento.value,observacao:observacao.value.trim()});save();dlgNova.close()}
+function preencher(id){const a=contas.filter(c=>c.pago<c.valor-.005);contaPg.innerHTML=a.map(c=>`<option value="${c.id}">${esc(c.nome)} — falta ${money(c.valor-c.pago)}</option>`).join('');if(id)contaPg.value=id}
+function abrirPagamento(){preencher();if(!contaPg.options.length)return alert('Não há contas pendentes.');valorPg.value='';dlgPg.showModal()}
+function pagarDireto(id){preencher(id);valorPg.value='';dlgPg.showModal()}
+function salvarPagamento(e){e.preventDefault();const c=contas.find(x=>x.id===contaPg.value),v=parseBR(valorPg.value);if(!c||!v||v<=0)return alert('Informe um valor válido.');const r=c.valor-c.pago;if(v>r+.005)return alert('O pagamento é maior que o saldo restante.');c.pago+=v;save();dlgPg.close()}
+function editar(id){const c=contas.find(x=>x.id===id);if(!c)return;editId.value=id;editNome.value=c.nome;editValor.value=String(c.valor).replace('.',',');editVencimento.value=c.vencimento||'';editObservacao.value=c.observacao||'';dlgEdit.showModal()}
+function salvarEdicao(e){e.preventDefault();const c=contas.find(x=>x.id===editId.value),v=parseBR(editValor.value);if(!c||!v||v<=0)return alert('Valor inválido.');if(v<c.pago)return alert('O valor total não pode ser menor que o já pago.');c.nome=editNome.value.trim();c.valor=v;c.vencimento=editVencimento.value;c.observacao=editObservacao.value.trim();save();dlgEdit.close()}
+function excluir(id){if(confirm('Excluir esta conta?')){contas=contas.filter(c=>c.id!==id);save()}}
+function exportar(){const blob=new Blob([JSON.stringify(contas,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='saldo-a-pagar-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+let deferredPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBox.style.display='block'});
+async function instalar(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBox.style.display='none'}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
+render();
+</script>
+
+<div style="text-align:center; margin-top:30px; padding:20px; font-size:12px; color:#777;">
+  Saldo a Pagar • v1.0<br>
+  Desenvolvido por <strong>Robert Junior</strong> © 2026
+</div>
+
+</body>
+</html>
