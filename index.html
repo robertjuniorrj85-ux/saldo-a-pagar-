@@ -102,7 +102,7 @@ textarea{min-height:78px;resize:vertical}.modal-actions{display:flex;gap:9px;mar
 <div class="note">🔴 Atrasada &nbsp; • &nbsp; 🟠 Vence hoje &nbsp; • &nbsp; 🟡 Vence em até 3 dias &nbsp; • &nbsp; 🟢 Paga<br>Os dados ficam armazenados neste dispositivo.</div>
 
 <div class="footer-sign">
- Saldo a Pagar • v2.0<br>
+ Saldo a Pagar • v2.1<br>
  Desenvolvido por <strong>Robert Junior</strong> © 2026
 </div>
 </div>
@@ -113,6 +113,17 @@ textarea{min-height:78px;resize:vertical}.modal-actions{display:flex;gap:9px;mar
 <label>Valor</label><input id="valor" inputmode="decimal" required placeholder="0,00">
 <label>Vencimento</label><input id="vencimento" type="date" required>
 <label>Observações</label><textarea id="observacao" placeholder="Ex.: 180 km rodados | 22,5 litros | R$ 7,00/L"></textarea>
+<label style="display:flex;align-items:center;gap:8px;margin-top:14px"><input id="recorrente" type="checkbox" style="width:18px;height:18px;margin:0"> Conta recorrente mensal</label>
+<div id="recorrenciaBox" style="display:none;background:var(--soft);border:1px solid var(--border);border-radius:12px;padding:10px;margin-top:8px">
+  <label style="margin-top:0">Repetir por quantos meses?</label>
+  <select id="recorrenciaMeses">
+    <option value="3">3 meses</option>
+    <option value="6">6 meses</option>
+    <option value="12" selected>12 meses</option>
+    <option value="24">24 meses</option>
+  </select>
+  <div class="tiny" style="margin-top:6px">A primeira conta é o mês atual; as demais serão criadas automaticamente nos meses seguintes.</div>
+</div>
 <div class="modal-actions"><button type="button" class="secondary" onclick="dlgNova.close()">Cancelar</button><button class="primary">Salvar</button></div>
 </form></dialog>
 
@@ -130,6 +141,7 @@ textarea{min-height:78px;resize:vertical}.modal-actions{display:flex;gap:9px;mar
 <label>Valor</label><input id="editValor" inputmode="decimal" required>
 <label>Vencimento</label><input id="editVencimento" type="date" required>
 <label>Observações</label><textarea id="editObservacao"></textarea>
+<label style="display:flex;align-items:center;gap:8px;margin-top:14px"><input id="editRecorrente" type="checkbox" style="width:18px;height:18px;margin:0"> Conta recorrente mensal</label>
 <div class="modal-actions"><button type="button" class="secondary" onclick="dlgEdit.close()">Cancelar</button><button class="primary">Salvar</button></div>
 </form></dialog>
 
@@ -175,6 +187,71 @@ contas=contas.map(c=>{
 if(mudou)localStorage.setItem(STORAGE,JSON.stringify(contas));
 
 let mesAtual=TODAY().slice(0,7);
+
+document.addEventListener('change',e=>{
+ if(e.target && e.target.id==='recorrente'){
+   recorrenciaBox.style.display=e.target.checked?'block':'none';
+ }
+});
+
+function addMesesData(data,delta){
+ const [y,m,d]=data.split('-').map(Number);
+ const dt=new Date(y,m-1+delta,1);
+ const ultimo=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
+ const dia=Math.min(d,ultimo);
+ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+}
+
+function criarSerieRecorrente(base, quantidade){
+ const serieId = base.serieId || ('serie-'+Date.now()+Math.random().toString(16).slice(2));
+ base.recorrente = true;
+ base.serieId = serieId;
+ base.parcelaSerie = 1;
+ base.totalSerie = quantidade;
+ const criadas=[base];
+ for(let i=1;i<quantidade;i++){
+   const venc=addMesesData(base.vencimento,i);
+   const duplicada=contas.some(x=>x.serieId===serieId && x.vencimento===venc);
+   if(duplicada) continue;
+   criadas.push({
+     id:String(Date.now()+i)+Math.random().toString(16).slice(2),
+     nome:base.nome,
+     valor:base.valor,
+     pago:0,
+     vencimento:venc,
+     observacao:base.observacao||'',
+     pagamentos:[],
+     recorrente:true,
+     serieId,
+     parcelaSerie:i+1,
+     totalSerie:quantidade
+   });
+ }
+ return criadas;
+}
+
+function tornarRecorrenteExistente(c,quantidade=12){
+ if(!c) return;
+ const serieId=c.serieId||('serie-'+Date.now()+Math.random().toString(16).slice(2));
+ c.recorrente=true;c.serieId=serieId;c.parcelaSerie=c.parcelaSerie||1;c.totalSerie=quantidade;
+ for(let i=1;i<quantidade;i++){
+   const venc=addMesesData(c.vencimento,i);
+   const existe=contas.some(x=>(x.serieId===serieId && x.vencimento===venc) || (x.nome.toLowerCase()===c.nome.toLowerCase() && x.vencimento===venc));
+   if(existe) continue;
+   let nomeNovo=c.nome;
+   const m=nomeNovo.match(/(\d+)\s*\/\s*(\d+)/);
+   if(m){
+     const atual=Number(m[1]), total=Number(m[2]), prox=atual+i;
+     if(prox<=total) nomeNovo=nomeNovo.replace(m[0],`${prox}/${total}`);
+     else continue;
+   }
+   contas.push({
+     id:String(Date.now()+i)+Math.random().toString(16).slice(2),
+     nome:nomeNovo,valor:c.valor,pago:0,vencimento:venc,observacao:c.observacao||'',pagamentos:[],
+     recorrente:true,serieId,parcelaSerie:i+1,totalSerie:quantidade
+   });
+ }
+}
 
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function parseBR(s){s=String(s||'').trim().replace(/\s/g,'');if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');return Number(s)}
@@ -236,7 +313,7 @@ function render(){
    const v=c.vencimento?dateLocal(c.vencimento).toLocaleDateString('pt-BR'):'Sem vencimento';
    const st=statusConta(c);
    return `<div class="debt ${st.key}">
-    <span class="status ${st.key}">${st.label}</span>
+    <span class="status ${st.key}">${st.label}</span>${c.recorrente?` <span class="status normal">RECORRENTE</span>`:''}
     <div class="topline"><div><div class="name">${esc(c.nome)}</div><div class="due">Vencimento: ${v}</div></div><div class="remain ${ok?'paid':''}">${ok?'PAGO ✓':money(r)}</div></div>
     <div class="progress"><div class="bar" style="width:${p}%"></div></div>
     <div class="meta"><span>Total: ${money(c.valor)}</span><span>Pago: ${money(c.pago)}</span></div>
@@ -251,7 +328,7 @@ function abrirEscolherMes(){mesPicker.value=mesAtual;dlgMes.showModal()}
 function escolherMes(e){e.preventDefault();mesAtual=mesPicker.value;dlgMes.close();render()}
 
 function abrirNova(){
- nome.value='';valor.value='';observacao.value='';
+ nome.value='';valor.value='';observacao.value='';recorrente.checked=false;recorrenciaMeses.value='12';recorrenciaBox.style.display='none';
  vencimento.value=`${mesAtual}-${String(Math.min(new Date().getDate(),28)).padStart(2,'0')}`;
  dlgNova.showModal();
 }
@@ -259,7 +336,12 @@ function salvarConta(e){
  e.preventDefault();const v=parseBR(valor.value);
  if(!nome.value.trim()||!v||v<=0||!vencimento.value)return alert('Informe nome, valor e vencimento válidos.');
  const id=String(Date.now())+Math.random().toString(16).slice(2);
- contas.push({id,nome:nome.value.trim(),valor:v,pago:0,vencimento:vencimento.value,observacao:observacao.value.trim(),pagamentos:[]});
+ const base={id,nome:nome.value.trim(),valor:v,pago:0,vencimento:vencimento.value,observacao:observacao.value.trim(),pagamentos:[],recorrente:false};
+ if(recorrente.checked){
+   const qtd=Number(recorrenciaMeses.value||12);
+   const serie=criarSerieRecorrente(base,qtd);
+   contas.push(...serie);
+ } else contas.push(base);
  mesAtual=ym(vencimento.value);save();dlgNova.close();
 }
 function preencherPagamento(id){
@@ -278,13 +360,17 @@ function salvarPagamento(e){
 }
 function editar(id){
  const c=contas.find(x=>x.id===id);if(!c)return;
- editId.value=id;editNome.value=c.nome;editValor.value=String(c.valor).replace('.',',');editVencimento.value=c.vencimento||'';editObservacao.value=c.observacao||'';dlgEdit.showModal();
+ editId.value=id;editNome.value=c.nome;editValor.value=String(c.valor).replace('.',',');editVencimento.value=c.vencimento||'';editObservacao.value=c.observacao||'';editRecorrente.checked=!!c.recorrente;dlgEdit.showModal();
 }
 function salvarEdicao(e){
  e.preventDefault();const c=contas.find(x=>x.id===editId.value),v=parseBR(editValor.value);
  if(!c||!v||v<=0||!editVencimento.value)return alert('Informe os dados corretamente.');
  if(v<c.pago-.005)return alert('O valor total não pode ser menor que o valor já pago.');
- c.nome=editNome.value.trim();c.valor=v;c.vencimento=editVencimento.value;c.observacao=editObservacao.value.trim();mesAtual=ym(c.vencimento);save();dlgEdit.close();
+ const eraRecorrente=!!c.recorrente;
+ c.nome=editNome.value.trim();c.valor=v;c.vencimento=editVencimento.value;c.observacao=editObservacao.value.trim();
+ c.recorrente=!!editRecorrente.checked;
+ if(c.recorrente && !eraRecorrente) tornarRecorrenteExistente(c,12);
+ mesAtual=ym(c.vencimento);save();dlgEdit.close();
 }
 function excluir(id){if(confirm('Excluir esta conta? Os pagamentos registrados nela também serão removidos.')){contas=contas.filter(c=>c.id!==id);save()}}
 
@@ -328,7 +414,7 @@ function abrirVisaoGeral(){
 }
 
 function exportar(){
- const blob=new Blob([JSON.stringify({versao:2,exportadoEm:new Date().toISOString(),contas},null,2)],{type:'application/json'});
+ const blob=new Blob([JSON.stringify({versao:2.1,exportadoEm:new Date().toISOString(),contas},null,2)],{type:'application/json'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`saldo-a-pagar-backup-${TODAY()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
