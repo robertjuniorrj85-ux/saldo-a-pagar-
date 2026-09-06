@@ -11,108 +11,336 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Saldo a Pagar</title>
 <style>
-:root{--bg:#f6f4fb;--card:#fff;--text:#201a2b;--muted:#746d7c;--primary:#6d28d9;--primary2:#8b5cf6;--ok:#15803d;--danger:#b91c1c;--border:#e7e1ef}
+:root{
+ --bg:#f6f4fb;--card:#fff;--text:#201a2b;--muted:#746d7c;--primary:#6d28d9;--primary2:#8b5cf6;
+ --ok:#15803d;--danger:#b91c1c;--warn:#b45309;--soon:#a16207;--border:#e7e1ef;--soft:#faf8fd
+}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-.wrap{max-width:760px;margin:auto;padding:18px 14px 40px}
-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
-h1{font-size:26px;margin:0} .sub{color:var(--muted);font-size:13px;margin-top:3px}
-.hero{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-radius:22px;padding:22px;box-shadow:0 10px 30px rgba(109,40,217,.18)}
-.hero .big{font-size:36px;font-weight:800;margin:5px 0 16px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);padding:12px;border-radius:14px} .stat b{display:block;font-size:18px;margin-top:3px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
-button{border:0;border-radius:14px;padding:14px;font-weight:700;cursor:pointer}
-.primary{background:var(--primary);color:#fff} .secondary{background:#fff;color:var(--primary);border:1px solid var(--border)} .ghost{background:transparent;color:var(--muted);padding:8px 10px} .danger{color:var(--danger)}
-.section-title{font-size:17px;font-weight:800;margin:20px 2px 10px}
-.debt{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:15px;margin-bottom:10px} .debt.done{background:#ecfdf3;border-color:#bbf7d0}
-.topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .name{font-weight:800;font-size:17px} .due{font-size:12px;color:var(--muted);margin-top:3px}
-.remain{font-weight:800;color:var(--primary);white-space:nowrap} .paid{color:var(--ok)}
-.progress{height:9px;background:#eee9f5;border-radius:999px;overflow:hidden;margin:12px 0} .bar{height:100%;background:var(--primary)}
+.wrap{max-width:760px;margin:auto;padding:16px 14px 42px}
+header{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
+h1{font-size:25px;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:2px}
+.header-actions{display:flex;gap:6px;align-items:center}
+button{border:0;border-radius:13px;padding:12px;font-weight:750;cursor:pointer;font-family:inherit}
+.primary{background:var(--primary);color:#fff}.secondary{background:#fff;color:var(--primary);border:1px solid var(--border)}
+.ghost{background:transparent;color:var(--muted);padding:8px 9px}.danger{color:var(--danger)}
+.month-nav{display:grid;grid-template-columns:46px 1fr 46px;gap:8px;align-items:center;margin:8px 0 12px}
+.month-nav .arrow{background:#fff;border:1px solid var(--border);font-size:20px;padding:10px}
+.month-title{background:#fff;border:1px solid var(--border);border-radius:14px;text-align:center;padding:10px 12px;font-weight:850;font-size:17px}
+.month-title small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+.hero{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(109,40,217,.18)}
+.hero .big{font-size:34px;font-weight:850;margin:4px 0 14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);padding:10px;border-radius:13px;min-width:0}
+.stat small{font-size:10px}.stat b{display:block;font-size:15px;margin-top:3px;overflow-wrap:anywhere}
+.alert-summary{display:none;margin:11px 0 0;background:#fff1f2;color:#991b1b;border:1px solid #fecdd3;border-radius:13px;padding:11px 12px;font-size:13px;font-weight:750}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0}
+.actions.three{grid-template-columns:1fr 1fr 1fr}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 2px 9px}
+.section-title{font-size:17px;font-weight:850}.tiny{font-size:11px;color:var(--muted)}
+.debt{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:9px;position:relative;overflow:hidden}
+.debt.done{background:#ecfdf3;border-color:#bbf7d0}.debt.overdue{border-color:#fecaca}.debt.today{border-color:#fed7aa}.debt.soon{border-color:#fde68a}
+.status{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;margin-bottom:8px}
+.status.overdue{background:#fee2e2;color:#991b1b}.status.today{background:#ffedd5;color:#9a3412}.status.soon{background:#fef3c7;color:#92400e}.status.paid{background:#dcfce7;color:#166534}.status.normal{background:#f3f4f6;color:#6b7280}
+.topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.name{font-weight:850;font-size:16px}.due{font-size:12px;color:var(--muted);margin-top:3px}
+.remain{font-weight:850;color:var(--primary);white-space:nowrap}.paid{color:var(--ok)}
+.progress{height:8px;background:#eee9f5;border-radius:999px;overflow:hidden;margin:11px 0}.bar{height:100%;background:var(--primary)}
 .meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
-.obs{margin-top:10px;padding:10px 12px;background:#faf8fd;border-radius:12px;color:var(--muted);font-size:13px;white-space:pre-wrap}
-.row-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap} .row-actions button{padding:9px 11px;border-radius:10px;font-size:12px}
-.install{display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;margin:12px 0;font-size:13px}
-dialog{border:0;border-radius:20px;padding:0;max-width:460px;width:calc(100% - 28px);box-shadow:0 25px 70px rgba(0,0,0,.22)} dialog::backdrop{background:rgba(25,20,30,.45)}
-.modal{padding:20px} .modal h2{margin:0 0 14px;font-size:20px} label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
-input,select,textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:13px;font-size:16px;background:white;font-family:inherit}
-textarea{min-height:84px;resize:vertical} .modal-actions{display:flex;gap:10px;margin-top:18px} .modal-actions button{flex:1}
+.obs{margin-top:9px;padding:9px 11px;background:var(--soft);border-radius:11px;color:var(--muted);font-size:12px;white-space:pre-wrap}
+.row-actions{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}.row-actions button{padding:8px 10px;border-radius:10px;font-size:11px}
+.empty{background:#fff;border:1px dashed var(--border);border-radius:16px;padding:24px 15px;text-align:center;color:var(--muted);font-size:13px}
+.install{display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:11px;margin:10px 0;font-size:13px}
+dialog{border:0;border-radius:20px;padding:0;max-width:480px;width:calc(100% - 24px);box-shadow:0 25px 70px rgba(0,0,0,.22);max-height:88vh}
+dialog::backdrop{background:rgba(25,20,30,.45)}.modal{padding:19px;overflow:auto;max-height:88vh}.modal h2{margin:0 0 13px;font-size:20px}
+label{display:block;font-size:13px;font-weight:750;margin:11px 0 5px}
+input,select,textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:12px;font-size:16px;background:white;font-family:inherit}
+textarea{min-height:78px;resize:vertical}.modal-actions{display:flex;gap:9px;margin-top:17px}.modal-actions button{flex:1}
+.checklist{display:grid;gap:8px;margin-top:10px}.checkitem{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:center;border:1px solid var(--border);padding:10px;border-radius:12px}
+.checkitem input{width:18px;height:18px;margin:0}.checkitem b{font-size:13px}.checkitem span{font-size:12px;color:var(--muted)}
+.overview-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid var(--border)}
+.overview-row:last-child{border-bottom:0}.overview-row b{font-size:14px}.overview-row span{font-size:12px;color:var(--muted)}
+.overview-total{background:var(--soft);border-radius:14px;padding:13px;margin-top:12px}
 .note{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;line-height:1.5}
-@media(max-width:430px){.hero .big{font-size:31px}.actions{grid-template-columns:1fr}}
+.footer-sign{text-align:center;margin-top:28px;padding:18px 8px 5px;font-size:12px;color:#777;line-height:1.55}
+@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stat:last-child{grid-column:1/-1}.actions.three{grid-template-columns:1fr 1fr}.actions.three button:last-child{grid-column:1/-1}.hero .big{font-size:30px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header><div><h1>Saldo a Pagar</h1><div class="sub">Controle offline das suas contas</div></div><button class="ghost" onclick="exportar()">Backup</button></header>
+<header>
+ <div><h1>Saldo a Pagar</h1><div class="sub">Controle mensal das suas contas</div></div>
+ <div class="header-actions"><button class="ghost" onclick="abrirVisaoGeral()">Visão Geral</button><button class="ghost" onclick="exportar()">Backup</button></div>
+</header>
+
 <div id="installBox" class="install">Quer instalar este app na tela inicial? <button class="primary" style="padding:8px 10px;margin-left:6px" onclick="instalar()">Instalar</button></div>
 
+<div class="month-nav">
+ <button class="arrow" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
+ <button class="month-title" onclick="abrirEscolherMes()"><span id="mesTitulo">Setembro 2026</span><small>toque para escolher outro mês</small></button>
+ <button class="arrow" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
+</div>
+
 <section class="hero">
-<small>Saldo devedor total</small><div class="big" id="saldo">R$ 0,00</div>
-<div class="stats"><div class="stat"><small>Valor inicial</small><b id="inicial">R$ 0,00</b></div><div class="stat"><small>Total pago</small><b id="pago">R$ 0,00</b></div></div>
+ <small>Saldo devedor do mês</small><div class="big" id="saldoMes">R$ 0,00</div>
+ <div class="stats">
+  <div class="stat"><small>Total das contas</small><b id="totalMes">R$ 0,00</b></div>
+  <div class="stat"><small>Total pago</small><b id="pagoMes">R$ 0,00</b></div>
+  <div class="stat"><small>Pago neste mês</small><b id="desembolsoMes">R$ 0,00</b></div>
+ </div>
+ <div id="alertResumo" class="alert-summary"></div>
 </section>
 
-<div class="actions"><button class="primary" onclick="abrirNova()">+ Adicionar conta</button><button class="secondary" onclick="abrirPagamento()">Registrar pagamento</button></div>
-<div class="section-title">Minhas contas</div><div id="lista"></div>
-<div class="note">Os dados ficam armazenados neste dispositivo. O app não usa câmera, microfone, localização, contatos ou conta bancária.</div>
+<div class="actions three">
+ <button class="primary" onclick="abrirNova()">+ Adicionar conta</button>
+ <button class="secondary" onclick="abrirPagamento()">Registrar pagamento</button>
+ <button class="secondary" onclick="abrirCopiar()">Copiar p/ próximo mês</button>
+</div>
+
+<div class="section-head"><div class="section-title">Contas do mês</div><div id="qtdMes" class="tiny"></div></div>
+<div id="lista"></div>
+
+<div class="note">🔴 Atrasada &nbsp; • &nbsp; 🟠 Vence hoje &nbsp; • &nbsp; 🟡 Vence em até 3 dias &nbsp; • &nbsp; 🟢 Paga<br>Os dados ficam armazenados neste dispositivo.</div>
+
+<div class="footer-sign">
+ Saldo a Pagar • v2.0<br>
+ Desenvolvido por <strong>Robert Junior</strong> © 2026
+</div>
 </div>
 
 <dialog id="dlgNova"><form class="modal" onsubmit="salvarConta(event)">
 <h2>Adicionar conta</h2>
-<label>Nome</label><input id="nome" required placeholder="Ex.: Combustível 06">
+<label>Nome</label><input id="nome" required placeholder="Ex.: Energia">
 <label>Valor</label><input id="valor" inputmode="decimal" required placeholder="0,00">
-<label>Vencimento</label><input id="vencimento" type="date">
+<label>Vencimento</label><input id="vencimento" type="date" required>
 <label>Observações</label><textarea id="observacao" placeholder="Ex.: 180 km rodados | 22,5 litros | R$ 7,00/L"></textarea>
 <div class="modal-actions"><button type="button" class="secondary" onclick="dlgNova.close()">Cancelar</button><button class="primary">Salvar</button></div>
 </form></dialog>
 
 <dialog id="dlgPg"><form class="modal" onsubmit="salvarPagamento(event)">
-<h2>Registrar pagamento</h2><label>Conta</label><select id="contaPg" required></select><label>Valor pago</label><input id="valorPg" inputmode="decimal" required placeholder="0,00">
+<h2>Registrar pagamento</h2>
+<label>Conta</label><select id="contaPg" required></select>
+<label>Valor pago</label><input id="valorPg" inputmode="decimal" required placeholder="0,00">
+<label>Data do pagamento</label><input id="dataPg" type="date" required>
 <div class="modal-actions"><button type="button" class="secondary" onclick="dlgPg.close()">Cancelar</button><button class="primary">Abater</button></div>
 </form></dialog>
 
 <dialog id="dlgEdit"><form class="modal" onsubmit="salvarEdicao(event)">
-<h2>Editar conta</h2><input id="editId" type="hidden"><label>Nome</label><input id="editNome" required><label>Valor</label><input id="editValor" inputmode="decimal" required>
-<label>Vencimento</label><input id="editVencimento" type="date"><label>Observações</label><textarea id="editObservacao"></textarea>
+<h2>Editar conta</h2><input id="editId" type="hidden">
+<label>Nome</label><input id="editNome" required>
+<label>Valor</label><input id="editValor" inputmode="decimal" required>
+<label>Vencimento</label><input id="editVencimento" type="date" required>
+<label>Observações</label><textarea id="editObservacao"></textarea>
 <div class="modal-actions"><button type="button" class="secondary" onclick="dlgEdit.close()">Cancelar</button><button class="primary">Salvar</button></div>
 </form></dialog>
 
+<dialog id="dlgMes"><form class="modal" onsubmit="escolherMes(event)">
+<h2>Escolher mês</h2>
+<label>Mês e ano</label><input id="mesPicker" type="month" required>
+<div class="modal-actions"><button type="button" class="secondary" onclick="dlgMes.close()">Cancelar</button><button class="primary">Abrir</button></div>
+</form></dialog>
+
+<dialog id="dlgCopiar"><form class="modal" onsubmit="copiarSelecionadas(event)">
+<h2>Copiar para o próximo mês</h2>
+<div class="tiny">Marque somente as contas que deseja repetir. Os valores são copiados, mas os pagamentos começam zerados.</div>
+<div id="listaCopiar" class="checklist"></div>
+<div class="modal-actions"><button type="button" class="secondary" onclick="dlgCopiar.close()">Cancelar</button><button class="primary">Copiar</button></div>
+</form></dialog>
+
+<dialog id="dlgGeral"><div class="modal">
+<h2>Visão Geral</h2>
+<div id="visaoGeral"></div>
+<div class="modal-actions"><button class="primary" onclick="dlgGeral.close()">Fechar</button></div>
+</div></dialog>
+
 <script>
 const STORAGE='saldo_a_pagar_pwa_v4';
-const INICIAIS=[{"id": "1", "nome": "DÍZIMO ROSÂNGELA", "valor": 250.0, "pago": 250.0, "vencimento": "2026-09-01", "observacao": ""}, {"id": "2", "nome": "RECARGA DE CELULAR JULIA", "valor": 30.0, "pago": 30.0, "vencimento": "2026-09-03", "observacao": ""}, {"id": "3", "nome": "RECARGA CELULAR ROSÂNGELA", "valor": 30.0, "pago": 30.0, "vencimento": "2026-09-04", "observacao": ""}, {"id": "4", "nome": "COMBUSTÍVEL 01", "valor": 132.8, "pago": 132.8, "vencimento": "2026-09-04", "observacao": "154,2 km rodados | 18,972 litros | R$ 7,00/L"}, {"id": "5", "nome": "MESADA JULIA", "valor": 150.0, "pago": 150.0, "vencimento": "2026-09-05", "observacao": ""}, {"id": "6", "nome": "CARRO", "valor": 1350.0, "pago": 0, "vencimento": "2026-09-08", "observacao": ""}, {"id": "7", "nome": "COMBUSTÍVEL 02", "valor": 150.0, "pago": 0, "vencimento": "2026-09-08", "observacao": ""}, {"id": "8", "nome": "FACULDADE - 5 / 17", "valor": 130.0, "pago": 0, "vencimento": "2026-09-10", "observacao": ""}, {"id": "9", "nome": "BANESE CARD", "valor": 600.0, "pago": 0, "vencimento": "2026-09-11", "observacao": ""}, {"id": "10", "nome": "DÍZIMO JUNIOR", "valor": 510.0, "pago": 0, "vencimento": "2026-09-12", "observacao": ""}, {"id": "11", "nome": "COMPRAS", "valor": 1200.0, "pago": 0, "vencimento": "2026-09-12", "observacao": ""}, {"id": "12", "nome": "RECARGA CARTEIRA ÔNIBUS", "valor": 100.0, "pago": 0, "vencimento": "2026-09-12", "observacao": ""}, {"id": "13", "nome": "HIPERCARD", "valor": 700.0, "pago": 0, "vencimento": "2026-09-15", "observacao": ""}, {"id": "14", "nome": "COMBUSTÍVEL 03", "valor": 175.01, "pago": 0, "vencimento": "2026-09-15", "observacao": "180 km rodados"}, {"id": "15", "nome": "ACADEMIA JULIA", "valor": 80.0, "pago": 0, "vencimento": "2026-09-20", "observacao": ""}, {"id": "16", "nome": "ENERGIA", "valor": 120.0, "pago": 0, "vencimento": "2026-09-21", "observacao": ""}, {"id": "17", "nome": "ÁGUA", "valor": 70.0, "pago": 0, "vencimento": "2026-09-21", "observacao": ""}, {"id": "18", "nome": "COMBUSTÍVEL 04", "valor": 153.0, "pago": 0, "vencimento": "2026-09-22", "observacao": ""}, {"id": "19", "nome": "FUTEBOL SOCIETY", "valor": 40.0, "pago": 0, "vencimento": "2026-09-25", "observacao": ""}, {"id": "20", "nome": "CASA", "valor": 390.0, "pago": 0, "vencimento": "2026-09-28", "observacao": ""}, {"id": "21", "nome": "COMBUSTÍVEL 05", "valor": 150.0, "pago": 0, "vencimento": "2026-09-30", "observacao": ""}, {"id": "22", "nome": "ACADEMIA ROSÂNGELA", "valor": 80.0, "pago": 0, "vencimento": "2026-09-30", "observacao": ""}];
+const TODAY=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const INICIAIS=[];
 let contas=JSON.parse(localStorage.getItem(STORAGE)||'null');
 if(!Array.isArray(contas)){contas=INICIAIS;localStorage.setItem(STORAGE,JSON.stringify(contas));}
+
+// Migração automática da versão anterior: preserva contas e cria histórico básico dos valores já pagos.
+let mudou=false;
+contas=contas.map(c=>{
+ if(!Array.isArray(c.pagamentos)){
+   c.pagamentos=[];
+   if(Number(c.pago||0)>0){
+     c.pagamentos.push({valor:Number(c.pago||0),data:c.vencimento||TODAY(),legado:true});
+   }
+   mudou=true;
+ }
+ c.pago=Number(c.pago||0); c.valor=Number(c.valor||0); c.observacao=c.observacao||'';
+ return c;
+});
+if(mudou)localStorage.setItem(STORAGE,JSON.stringify(contas));
+
+let mesAtual=TODAY().slice(0,7);
+
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function parseBR(s){s=String(s||'').trim().replace(/\s/g,'');if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');return Number(s)}
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function save(){localStorage.setItem(STORAGE,JSON.stringify(contas));render()}
-function render(){
- const inicial=contas.reduce((a,c)=>a+c.valor,0),pago=contas.reduce((a,c)=>a+c.pago,0);
- document.getElementById('inicial').textContent=money(inicial);document.getElementById('pago').textContent=money(pago);document.getElementById('saldo').textContent=money(inicial-pago);
- document.getElementById('lista').innerHTML=[...contas].sort((a,b)=>(a.vencimento||'9999').localeCompare(b.vencimento||'9999')).map(c=>{
-  const r=Math.max(0,c.valor-c.pago),ok=r<.005,p=c.valor?Math.min(100,c.pago/c.valor*100):100,v=c.vencimento?new Date(c.vencimento+'T12:00:00').toLocaleDateString('pt-BR'):'Sem vencimento';
-  return `<div class="debt ${ok?'done':''}"><div class="topline"><div><div class="name">${esc(c.nome)}</div><div class="due">${v}</div></div><div class="remain ${ok?'paid':''}">${ok?'PAGO ✓':money(r)}</div></div><div class="progress"><div class="bar" style="width:${p}%"></div></div><div class="meta"><span>Total: ${money(c.valor)}</span><span>Pago: ${money(c.pago)}</span></div>${c.observacao?`<div class="obs">${esc(c.observacao)}</div>`:''}<div class="row-actions">${ok?'':`<button class="secondary" onclick="pagarDireto('${c.id}')">+ Pagamento</button>`}<button class="secondary" onclick="editar('${c.id}')">Editar</button><button class="ghost danger" onclick="excluir('${c.id}')">Excluir</button></div></div>`
- }).join('');
+function ym(date){return (date||'').slice(0,7)}
+function dateLocal(s){return s?new Date(s+'T12:00:00'):null}
+function nomeMes(ymv){
+ const [y,m]=ymv.split('-').map(Number);
+ return new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^./,x=>x.toUpperCase());
 }
-function abrirNova(){nome.value='';valor.value='';vencimento.value='';observacao.value='';dlgNova.showModal()}
-function salvarConta(e){e.preventDefault();const v=parseBR(valor.value);if(!nome.value.trim()||!v||v<=0)return alert('Informe nome e valor válidos.');contas.push({id:String(Date.now()),nome:nome.value.trim(),valor:v,pago:0,vencimento:vencimento.value,observacao:observacao.value.trim()});save();dlgNova.close()}
-function preencher(id){const a=contas.filter(c=>c.pago<c.valor-.005);contaPg.innerHTML=a.map(c=>`<option value="${c.id}">${esc(c.nome)} — falta ${money(c.valor-c.pago)}</option>`).join('');if(id)contaPg.value=id}
-function abrirPagamento(){preencher();if(!contaPg.options.length)return alert('Não há contas pendentes.');valorPg.value='';dlgPg.showModal()}
-function pagarDireto(id){preencher(id);valorPg.value='';dlgPg.showModal()}
-function salvarPagamento(e){e.preventDefault();const c=contas.find(x=>x.id===contaPg.value),v=parseBR(valorPg.value);if(!c||!v||v<=0)return alert('Informe um valor válido.');const r=c.valor-c.pago;if(v>r+.005)return alert('O pagamento é maior que o saldo restante.');c.pago+=v;save();dlgPg.close()}
-function editar(id){const c=contas.find(x=>x.id===id);if(!c)return;editId.value=id;editNome.value=c.nome;editValor.value=String(c.valor).replace('.',',');editVencimento.value=c.vencimento||'';editObservacao.value=c.observacao||'';dlgEdit.showModal()}
-function salvarEdicao(e){e.preventDefault();const c=contas.find(x=>x.id===editId.value),v=parseBR(editValor.value);if(!c||!v||v<=0)return alert('Valor inválido.');if(v<c.pago)return alert('O valor total não pode ser menor que o já pago.');c.nome=editNome.value.trim();c.valor=v;c.vencimento=editVencimento.value;c.observacao=editObservacao.value.trim();save();dlgEdit.close()}
-function excluir(id){if(confirm('Excluir esta conta?')){contas=contas.filter(c=>c.id!==id);save()}}
-function exportar(){const blob=new Blob([JSON.stringify(contas,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='saldo-a-pagar-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-let deferredPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBox.style.display='block'});
+function shiftMonth(ymv,delta){
+ const [y,m]=ymv.split('-').map(Number),d=new Date(y,m-1+delta,1);
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function diasPara(data){
+ if(!data)return 99999;
+ const a=dateLocal(TODAY()),b=dateLocal(data);
+ return Math.round((b-a)/86400000);
+}
+function statusConta(c){
+ const r=Math.max(0,c.valor-c.pago);
+ if(r<.005)return {key:'paid',label:'PAGA',rank:4};
+ const d=diasPara(c.vencimento);
+ if(d<0)return {key:'overdue',label:'ATRASADA',rank:0};
+ if(d===0)return {key:'today',label:'VENCE HOJE',rank:1};
+ if(d<=3)return {key:'soon',label:`VENCE EM ${d} ${d===1?'DIA':'DIAS'}`,rank:2};
+ return {key:'normal',label:'PENDENTE',rank:3};
+}
+function contasDoMes(m=mesAtual){return contas.filter(c=>ym(c.vencimento)===m)}
+function totalPagoNoMesCalendario(m){
+ return contas.reduce((s,c)=>s+(c.pagamentos||[]).filter(p=>ym(p.data)===m).reduce((a,p)=>a+Number(p.valor||0),0),0);
+}
+
+function render(){
+ document.getElementById('mesTitulo').textContent=nomeMes(mesAtual);
+ const cm=contasDoMes();
+ const total=cm.reduce((a,c)=>a+c.valor,0),pago=cm.reduce((a,c)=>a+c.pago,0),saldo=Math.max(0,total-pago);
+ document.getElementById('totalMes').textContent=money(total);
+ document.getElementById('pagoMes').textContent=money(pago);
+ document.getElementById('saldoMes').textContent=money(saldo);
+ document.getElementById('desembolsoMes').textContent=money(totalPagoNoMesCalendario(mesAtual));
+ document.getElementById('qtdMes').textContent=`${cm.length} ${cm.length===1?'conta':'contas'}`;
+
+ const atrasadas=cm.filter(c=>statusConta(c).key==='overdue');
+ const valorAtrasado=atrasadas.reduce((s,c)=>s+Math.max(0,c.valor-c.pago),0);
+ const alertBox=document.getElementById('alertResumo');
+ if(atrasadas.length){
+   alertBox.style.display='block';
+   alertBox.textContent=`⚠️ ${atrasadas.length} ${atrasadas.length===1?'conta atrasada':'contas atrasadas'} • ${money(valorAtrasado)}`;
+ } else alertBox.style.display='none';
+
+ const ordenadas=[...cm].sort((a,b)=>{
+   const sa=statusConta(a),sb=statusConta(b);
+   return sa.rank-sb.rank || (a.vencimento||'9999').localeCompare(b.vencimento||'9999') || a.nome.localeCompare(b.nome);
+ });
+ document.getElementById('lista').innerHTML=ordenadas.length?ordenadas.map(c=>{
+   const r=Math.max(0,c.valor-c.pago),ok=r<.005,p=c.valor?Math.min(100,c.pago/c.valor*100):100;
+   const v=c.vencimento?dateLocal(c.vencimento).toLocaleDateString('pt-BR'):'Sem vencimento';
+   const st=statusConta(c);
+   return `<div class="debt ${st.key}">
+    <span class="status ${st.key}">${st.label}</span>
+    <div class="topline"><div><div class="name">${esc(c.nome)}</div><div class="due">Vencimento: ${v}</div></div><div class="remain ${ok?'paid':''}">${ok?'PAGO ✓':money(r)}</div></div>
+    <div class="progress"><div class="bar" style="width:${p}%"></div></div>
+    <div class="meta"><span>Total: ${money(c.valor)}</span><span>Pago: ${money(c.pago)}</span></div>
+    ${c.observacao?`<div class="obs">${esc(c.observacao)}</div>`:''}
+    <div class="row-actions">${ok?'':`<button class="secondary" onclick="pagarDireto('${c.id}')">+ Pagamento</button>`}<button class="secondary" onclick="editar('${c.id}')">Editar</button><button class="ghost danger" onclick="excluir('${c.id}')">Excluir</button></div>
+   </div>`;
+ }).join(''):`<div class="empty">Nenhuma conta cadastrada em <b>${nomeMes(mesAtual)}</b>.<br>Use “+ Adicionar conta” ou copie contas do mês anterior.</div>`;
+}
+
+function mudarMes(n){mesAtual=shiftMonth(mesAtual,n);render();window.scrollTo({top:0,behavior:'smooth'})}
+function abrirEscolherMes(){mesPicker.value=mesAtual;dlgMes.showModal()}
+function escolherMes(e){e.preventDefault();mesAtual=mesPicker.value;dlgMes.close();render()}
+
+function abrirNova(){
+ nome.value='';valor.value='';observacao.value='';
+ vencimento.value=`${mesAtual}-${String(Math.min(new Date().getDate(),28)).padStart(2,'0')}`;
+ dlgNova.showModal();
+}
+function salvarConta(e){
+ e.preventDefault();const v=parseBR(valor.value);
+ if(!nome.value.trim()||!v||v<=0||!vencimento.value)return alert('Informe nome, valor e vencimento válidos.');
+ const id=String(Date.now())+Math.random().toString(16).slice(2);
+ contas.push({id,nome:nome.value.trim(),valor:v,pago:0,vencimento:vencimento.value,observacao:observacao.value.trim(),pagamentos:[]});
+ mesAtual=ym(vencimento.value);save();dlgNova.close();
+}
+function preencherPagamento(id){
+ const a=contasDoMes().filter(c=>c.pago<c.valor-.005);
+ contaPg.innerHTML=a.map(c=>`<option value="${c.id}">${esc(c.nome)} — falta ${money(c.valor-c.pago)}</option>`).join('');
+ if(id)contaPg.value=id;
+}
+function abrirPagamento(){preencherPagamento();if(!contaPg.options.length)return alert('Não há contas pendentes neste mês.');valorPg.value='';dataPg.value=TODAY();dlgPg.showModal()}
+function pagarDireto(id){preencherPagamento(id);valorPg.value='';dataPg.value=TODAY();dlgPg.showModal()}
+function salvarPagamento(e){
+ e.preventDefault();const c=contas.find(x=>x.id===contaPg.value),v=parseBR(valorPg.value),data=dataPg.value;
+ if(!c||!v||v<=0||!data)return alert('Informe um valor e uma data válidos.');
+ const r=c.valor-c.pago;if(v>r+.005)return alert('O pagamento é maior que o saldo restante.');
+ c.pago=Number((c.pago+v).toFixed(2));c.pagamentos=c.pagamentos||[];c.pagamentos.push({valor:v,data});
+ save();dlgPg.close();
+}
+function editar(id){
+ const c=contas.find(x=>x.id===id);if(!c)return;
+ editId.value=id;editNome.value=c.nome;editValor.value=String(c.valor).replace('.',',');editVencimento.value=c.vencimento||'';editObservacao.value=c.observacao||'';dlgEdit.showModal();
+}
+function salvarEdicao(e){
+ e.preventDefault();const c=contas.find(x=>x.id===editId.value),v=parseBR(editValor.value);
+ if(!c||!v||v<=0||!editVencimento.value)return alert('Informe os dados corretamente.');
+ if(v<c.pago-.005)return alert('O valor total não pode ser menor que o valor já pago.');
+ c.nome=editNome.value.trim();c.valor=v;c.vencimento=editVencimento.value;c.observacao=editObservacao.value.trim();mesAtual=ym(c.vencimento);save();dlgEdit.close();
+}
+function excluir(id){if(confirm('Excluir esta conta? Os pagamentos registrados nela também serão removidos.')){contas=contas.filter(c=>c.id!==id);save()}}
+
+function abrirCopiar(){
+ const cm=contasDoMes();
+ if(!cm.length)return alert('Não há contas neste mês para copiar.');
+ listaCopiar.innerHTML=cm.map(c=>`<label class="checkitem"><input type="checkbox" name="cp" value="${c.id}"><div><b>${esc(c.nome)}</b><br><span>Vence dia ${c.vencimento?.slice(8,10)||'--'}</span></div><b>${money(c.valor)}</b></label>`).join('');
+ dlgCopiar.showModal();
+}
+function copiarSelecionadas(e){
+ e.preventDefault();
+ const ids=[...document.querySelectorAll('input[name="cp"]:checked')].map(x=>x.value);
+ if(!ids.length)return alert('Marque pelo menos uma conta.');
+ const destino=shiftMonth(mesAtual,1);
+ const [dy,dm]=destino.split('-').map(Number);
+ let criadas=0;
+ ids.forEach(id=>{
+   const c=contas.find(x=>x.id===id);if(!c)return;
+   let dia=Number((c.vencimento||'').slice(8,10)||1);
+   const ultimo=new Date(dy,dm,0).getDate();dia=Math.min(dia,ultimo);
+   const venc=`${destino}-${String(dia).padStart(2,'0')}`;
+   const duplicada=contas.some(x=>ym(x.vencimento)===destino && x.nome.toLowerCase()===c.nome.toLowerCase() && x.vencimento===venc);
+   if(!duplicada){
+     contas.push({id:String(Date.now()+criadas)+Math.random().toString(16).slice(2),nome:c.nome,valor:c.valor,pago:0,vencimento:venc,observacao:c.observacao||'',pagamentos:[]});criadas++;
+   }
+ });
+ dlgCopiar.close();
+ if(!criadas)return alert('As contas selecionadas já existem no próximo mês.');
+ mesAtual=destino;save();alert(`${criadas} ${criadas===1?'conta copiada':'contas copiadas'} para ${nomeMes(destino)}.`);
+}
+
+function abrirVisaoGeral(){
+ const meses=[...new Set(contas.map(c=>ym(c.vencimento)).filter(Boolean))].sort();
+ const linhas=meses.map(m=>{
+   const a=contasDoMes(m),total=a.reduce((s,c)=>s+c.valor,0),pago=a.reduce((s,c)=>s+c.pago,0),saldo=Math.max(0,total-pago);
+   return `<div class="overview-row"><div><b>${nomeMes(m)}</b><br><span>${a.length} ${a.length===1?'conta':'contas'} • pago ${money(pago)}</span></div><b>${money(saldo)}</b></div>`;
+ }).join('');
+ const geral=contas.reduce((s,c)=>s+Math.max(0,c.valor-c.pago),0);
+ visaoGeral.innerHTML=(linhas||'<div class="empty">Ainda não existem contas cadastradas.</div>')+`<div class="overview-total"><b>Saldo devedor geral</b><div style="font-size:24px;font-weight:900;margin-top:4px;color:var(--primary)">${money(geral)}</div></div>`;
+ dlgGeral.showModal();
+}
+
+function exportar(){
+ const blob=new Blob([JSON.stringify({versao:2,exportadoEm:new Date().toISOString(),contas},null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`saldo-a-pagar-backup-${TODAY()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBox.style.display='block'});
 async function instalar(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBox.style.display='none'}
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
+
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').then(reg=>reg.update()).catch(()=>{}));
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!sessionStorage.getItem('swReloaded')){sessionStorage.setItem('swReloaded','1');location.reload()}});
+}
 render();
 </script>
-
-<div style="text-align:center; margin-top:30px; padding:20px; font-size:12px; color:#777;">
-  Saldo a Pagar • v1.0<br>
-  Desenvolvido por <strong>Robert Junior</strong> © 2026
-</div>
-
 </body>
 </html>
