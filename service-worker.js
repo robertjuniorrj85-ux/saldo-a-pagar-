@@ -1,5 +1,5 @@
-const CACHE='saldo-a-pagar-v7';
-const STATIC=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='saldo-a-pagar-v8';
+const STATIC=['./manifest.webmanifest?v=2.2','./saldo-icon-192-v2.png?v=2.2','./saldo-icon-512-v2.png?v=2.2'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(STATIC)).then(()=>self.skipWaiting()));
